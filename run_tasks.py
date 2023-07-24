@@ -41,8 +41,7 @@ async def main():
     scheduler.add_task(task8)
     scheduler.add_task(task9)
 
-    await scheduler.execute_tasks()
-    await asyncio.sleep(1)
+    scheduler.execute_tasks()
     scheduler.save_state(tasks_state_filename)
 
 

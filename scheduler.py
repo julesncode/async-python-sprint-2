@@ -1,7 +1,8 @@
-import asyncio
 import json
 from collections import deque
+
 from job import Job, JobStatus
+
 
 class Scheduler:
     def __init__(self, max_tasks: int = 10):
@@ -14,21 +15,29 @@ class Scheduler:
             raise Exception("Scheduler is full. Cannot add more tasks.")
         self.tasks.append(task)
 
-    async def execute_tasks(self) -> None:
+    def execute_tasks(self) -> None:
         self.ready_tasks.extend(task for task in self.tasks if self.can_start_task(task))
 
         while self.ready_tasks:
             tasks_in_progress = []
             while len(tasks_in_progress) < self.max_tasks and self.ready_tasks:
                 task = self.ready_tasks.popleft()
-                tasks_in_progress.append(asyncio.create_task(task.execute()))
+                tasks_in_progress.append(task)
 
-            await asyncio.gather(*tasks_in_progress)
+            self.execute_tasks_in_parallel(tasks_in_progress)
 
             self.ready_tasks.extend(task for task in self.tasks if self.can_start_task(task))
 
-    @staticmethod
-    def can_start_task(task: Job) -> bool:
+    def execute_single_task(self, task) -> None:
+        task.status = JobStatus.RUNNING
+        task.execute()
+
+    def execute_tasks_in_parallel(self, tasks) -> None:
+        for task in tasks:
+            if task.status == JobStatus.WAITING:
+                self.execute_single_task(task)
+
+    def can_start_task(self, task: Job) -> bool:
         if task.status == JobStatus.COMPLETED:
             return False
         for dependency in task.dependencies:
@@ -45,6 +54,7 @@ class Scheduler:
                     "duration": task.duration,
                     "start_time": task.start_time,
                     "restarts": task.restarts,
+                    "max_restarts": task.max_restarts,  # Add max_restarts to the saved state
                     "dependencies": [dep.task_id for dep in task.dependencies],
                     "status": task.status.value
                 }
@@ -68,5 +78,6 @@ class Scheduler:
                 task.duration = task_info.get("duration")
                 task.start_time = task_info.get("start_time")
                 task.restarts = task_info.get("restarts")
+                task.max_restarts = task_info.get("max_restarts")  # Load max_restarts from the saved state
                 task.dependencies = [task_map[dep_id] for dep_id in task_info.get("dependencies", [])]
                 task.status = JobStatus(task_info.get("status", JobStatus.WAITING))

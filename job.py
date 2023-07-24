@@ -1,4 +1,4 @@
-import asyncio
+import time
 from enum import Enum
 from typing import Any, Optional
 
@@ -20,6 +20,7 @@ class Job:
             duration: Optional[float] = None,
             start_time: Optional[float] = None,
             restarts: int = 0,
+            max_restarts: int = 1,
             dependencies: Optional[list] = None,
             **kwargs: dict,
     ):
@@ -27,19 +28,21 @@ class Job:
         self.duration = duration
         self.start_time = start_time
         self.restarts = restarts
+        self.max_restarts = max_restarts
         self.dependencies = dependencies or []
         self.status = JobStatus.WAITING
         self.func = func
         self.kwargs = kwargs
 
-    async def execute(self) -> None:
+    def execute(self) -> None:
         logger.info(f"Задание {self.task_id} начало выполняться.")
         self.status = JobStatus.RUNNING
         if self.start_time:
-            await asyncio.sleep(self.start_time)
-        for attempt in range(self.restarts + 1):
+            time.sleep(self.start_time)  # Use time.sleep() instead of asyncio.sleep()
+
+        for attempt in range(self.max_restarts + 1):
             try:
-                await self.run()
+                self.run()
                 self.status = JobStatus.COMPLETED
                 break
             except Exception as e:
@@ -47,9 +50,9 @@ class Job:
                 logger.error(f"Задание {self.task_id} обвалилось на попытке номер {attempt + 1}: {e}")
         logger.info(f"Задание {self.task_id} завершилось со статусом: {self.status}")
 
-    async def run(self) -> None:
+    def run(self) -> None:
         logger.info(f"Задание {self.task_id} начало выполнение функции.")
         if self.duration:
-            await asyncio.sleep(self.duration)
-        await self.func(**self.kwargs)
+            time.sleep(self.duration)  # Use time.sleep() instead of asyncio.sleep()
+        self.func(**self.kwargs)
         logger.info(f"Задание {self.task_id} завершило выполнение функции.")
