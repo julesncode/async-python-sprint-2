@@ -1,7 +1,15 @@
 import asyncio
+from enum import Enum
 from typing import Any, Optional
 
 from scheduler_logger import logger
+
+
+class JobStatus(str, Enum):
+    COMPLETED = 'completed'
+    RUNNING = 'running'
+    WAITING = 'waiting'
+    FAILED = 'failed'
 
 
 class Job:
@@ -20,22 +28,22 @@ class Job:
         self.start_time = start_time
         self.restarts = restarts
         self.dependencies = dependencies or []
-        self.status = "waiting"
+        self.status = JobStatus.WAITING
         self.func = func
         self.kwargs = kwargs
 
     async def execute(self) -> None:
         logger.info(f"Задание {self.task_id} начало выполняться.")
-        self.status = "running"
+        self.status = JobStatus.RUNNING
         if self.start_time:
             await asyncio.sleep(self.start_time)
         for attempt in range(self.restarts + 1):
             try:
                 await self.run()
-                self.status = "completed"
+                self.status = JobStatus.COMPLETED
                 break
             except Exception as e:
-                self.status = "failed"
+                self.status = JobStatus.FAILED
                 logger.error(f"Задание {self.task_id} обвалилось на попытке номер {attempt + 1}: {e}")
         logger.info(f"Задание {self.task_id} завершилось со статусом: {self.status}")
 
