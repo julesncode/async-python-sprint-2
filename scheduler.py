@@ -3,7 +3,7 @@ import json
 
 
 class Scheduler:
-    def __init__(self, max_tasks=10):
+    def __init__(self, max_tasks:int=10):
         self.max_tasks = max_tasks
         self.tasks = []
 

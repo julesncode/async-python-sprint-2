@@ -2,7 +2,8 @@ import asyncio
 import os
 import unittest
 
-from job import Job, create_directory, create_file_and_write, read_file, append_to_file
+from job import Job
+from sample_tasks import create_directory, create_file_and_write, read_file, append_to_file
 from scheduler import Scheduler
 
 
