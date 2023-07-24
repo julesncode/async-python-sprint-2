@@ -2,7 +2,7 @@ import asyncio
 import os
 import unittest
 
-from job import Job
+from job import Job, JobStatus
 from sample_tasks import create_directory, create_file_and_write, read_file, append_to_file
 from scheduler import Scheduler
 
@@ -55,9 +55,9 @@ class TestSchedulerAndJob(unittest.TestCase):
         new_scheduler.load_state(self.tasks_state_filename)
 
         self.assertEqual(len(new_scheduler.tasks), 3)
-        self.assertEqual(new_scheduler.tasks[0].status, "completed")
-        self.assertEqual(new_scheduler.tasks[1].status, "completed")
-        self.assertEqual(new_scheduler.tasks[2].status, "completed")
+        self.assertEqual(new_scheduler.tasks[0].status, JobStatus.COMPLETED)
+        self.assertEqual(new_scheduler.tasks[1].status, JobStatus.COMPLETED)
+        self.assertEqual(new_scheduler.tasks[2].status, JobStatus.COMPLETED)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import asyncio
 import json
 from collections import deque
-from job import JobStatus
+from job import Job, JobStatus
 
 class Scheduler:
     def __init__(self, max_tasks: int = 10):
@@ -27,7 +27,8 @@ class Scheduler:
 
             self.ready_tasks.extend(task for task in self.tasks if self.can_start_task(task))
 
-    def can_start_task(self, task) -> bool:
+    @staticmethod
+    def can_start_task(task: Job) -> bool:
         if task.status == JobStatus.COMPLETED:
             return False
         for dependency in task.dependencies:
