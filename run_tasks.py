@@ -1,4 +1,3 @@
-import asyncio
 import os
 
 from job import Job
@@ -7,7 +6,7 @@ from sample_tasks import create_directory, create_file_and_write, read_file, app
 from scheduler import Scheduler
 
 
-async def main():
+def main():
     scheduler = Scheduler(max_tasks=10)
 
     tasks_state_filename = "tasks_state.json"
@@ -46,4 +45,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
