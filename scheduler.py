@@ -69,15 +69,30 @@ class Scheduler:
             state = json.load(file)
 
         self.max_tasks = state.get("max_tasks", self.max_tasks)
-        task_map = {task.task_id: task for task in self.tasks}
+        task_map = {}
 
         for task_info in state.get("tasks", []):
             task_id = task_info["task_id"]
-            if task_id in task_map:
+            if task_info["status"] != JobStatus.COMPLETED:
+                task = Job(
+                    task_id=task_info["task_id"],
+                    duration=task_info.get("duration"),
+                    start_time=task_info.get("start_time"),
+                    restarts=task_info.get("restarts"),
+                    max_restarts=task_info.get("max_restarts"),
+                    dependencies=[],
+                    func=None,
+                    kwargs={},
+                )
+                task_map[task_id] = task
+
+        for task_info in state.get("tasks", []):
+            if task_info["status"] != JobStatus.COMPLETED:
+                task_id = task_info["task_id"]
                 task = task_map[task_id]
-                task.duration = task_info.get("duration")
-                task.start_time = task_info.get("start_time")
-                task.restarts = task_info.get("restarts")
-                task.max_restarts = task_info.get("max_restarts")  # Load max_restarts from the saved state
                 task.dependencies = [task_map[dep_id] for dep_id in task_info.get("dependencies", [])]
-                task.status = JobStatus(task_info.get("status", JobStatus.WAITING))
+                task.func = task_info.get("func")  # Get the task function directly from the loaded state
+                task.kwargs = task_info.get("kwargs", {})
+
+                self.tasks.append(task)
+

@@ -38,11 +38,16 @@ class Job:
         logger.info(f"Задание {self.task_id} начало выполняться.")
         self.status = JobStatus.RUNNING
         if self.start_time:
-            time.sleep(self.start_time)  # Use time.sleep() instead of asyncio.sleep()
+            time.sleep(self.start_time)
 
         for attempt in range(self.max_restarts + 1):
             try:
-                self.run()
+                coroutine = self.run()
+                while True:
+                    try:
+                        next(coroutine)
+                    except StopIteration:
+                        break
                 self.status = JobStatus.COMPLETED
                 break
             except Exception as e:
@@ -50,9 +55,9 @@ class Job:
                 logger.error(f"Задание {self.task_id} обвалилось на попытке номер {attempt + 1}: {e}")
         logger.info(f"Задание {self.task_id} завершилось со статусом: {self.status}")
 
-    def run(self) -> None:
+    def run(self):
         logger.info(f"Задание {self.task_id} начало выполнение функции.")
         if self.duration:
-            time.sleep(self.duration)  # Use time.sleep() instead of asyncio.sleep()
-        self.func(**self.kwargs)
+            time.sleep(self.duration)
+        yield from self.func(**self.kwargs)
         logger.info(f"Задание {self.task_id} завершило выполнение функции.")
